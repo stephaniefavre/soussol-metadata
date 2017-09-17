@@ -145,7 +145,7 @@ if __name__ == '__main__':
         sys.exit(2)
 
 
-    # Connection to PostgreSQL/PostGIS database
+    # Connection to PostgreSQL database
     db = "soussol"
 
     table_list = []

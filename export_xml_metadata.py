@@ -22,13 +22,12 @@
 
 
 import psycopg2.extras
-
 import xml.etree.cElementTree as ET
 from xml.dom import minidom
 import os
-import optparse
 
 
+# Method to get a list of all attributes with table name, attribute, data type, description (theme set value to 'none')
 def get_attribute_type_desc(
         cur
 ):
@@ -51,7 +50,7 @@ def get_attribute_type_desc(
     return metadata_list
 
 
-
+# Method to add theme values to metadata list from table tmeta_theme
 def add_theme_to_metadatalist(
     cur,
     metadata_list
@@ -63,7 +62,6 @@ def add_theme_to_metadatalist(
             SELECT theme FROM metadata.tmeta_theme where table_name='{table_name}'
         """.format(table_name=metadata_obj['table_name'])
         cur.execute(querry)
-        #print(cur.fetchall())
         for themes in cur.fetchall():
             for element in themes:
                 theme_list.append(element)
@@ -76,7 +74,7 @@ def add_theme_to_metadatalist(
 
     return metadata_list
 
-
+# Method to get distinct themes from database
 def get_themes(
     cur
     ):
@@ -92,7 +90,7 @@ def get_themes(
 
     return theme_list
 
-
+# Method to get a human readable XML file
 def prettify(elem):
 
     rough_string = ET.tostring(elem, 'utf-8')
@@ -104,45 +102,44 @@ if __name__ == '__main__':
 
     xml_folder = './xml/'
 
-    # Check If XML Folder is exist otherwise create it
+    # Check if XML folder exists, otherwise create it
     if os.path.exists(xml_folder) == False:
         os.mkdir(xml_folder)
 
 
-    #Dropp XML Files
+    # Drop existing XML files
     os.system("rm -f ./xml/*.xml")
 
-    # Connect to PostgreSQL Database
+    # Connect to PostgreSQL database
     db = "soussol"
-
-    metadata_list = []
 
     conn = psycopg2.connect(dbname=db, user="postgres", password="123", host="127.0.0.1")
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-    # Get all elements (table name, attribute, type, description) from the metadata table -> Create metadata list
+    # Get all elements (theme, table name, attribute, data type, description) from the metadata table -> Create metadata list
+    metadata_list = []
     metadata_list = get_attribute_type_desc(cur=cur
     )
 
-    # Add theme related to table name to the metadata list
+    # Add theme value related to the metadata list
     metadata_list = add_theme_to_metadatalist(
         cur=cur,
         metadata_list=metadata_list
     )
 
 
-    # Get list of all Themes
+    # Get list of all themes
     theme_list = get_themes(cur)
 
-    # Iterate on each themes
+    # Iterate on each theme
+    # Start implementing XML parts
     for theme_element in theme_list:
         metadata = ET.Element('metadata')
 
         theme = ET.SubElement(metadata, 'theme')
         theme.text = theme_element
 
-        ##Avoir toute les tables ayant ce theme
-
+        # Get all tables related to the selected theme
         querry = """
         SELECT table_name FROM metadata.tmeta_theme  WHERE theme='{theme_element}'
         """.format(
@@ -150,27 +147,25 @@ if __name__ == '__main__':
         )
         cur.execute(querry)
 
-
-        ##Create list of metadata
         tables_list = []
         for elements in cur.fetchall():
             for table in elements:
                 tables_list.append(table)
 
-        ##Create Object Table name
+        # Create object 'Table name'
         for table in tables_list:
             table_name = ET.SubElement(theme, 'table_name')
             table_name.text = table
 
 
-            # Avoir tous les attributs ayant ces tables
-
+            # Get all attributes related to the selected table
             querry = """
                 SELECT table_name,attribute,data_type,description  FROM metadata.tmeta_global WHERE table_name='{table}'
             """.format(
                 table=table
             )
 
+            # Get data type and description for each attribute
             cur.execute(querry)
             for elements in cur.fetchall():
 
@@ -183,14 +178,14 @@ if __name__ == '__main__':
                 description = ET.SubElement(attribute, 'description')
                 description.text = elements['description']
 
+        # Create an XML file for each theme
+        with open('xml/{theme_element}.xml'.format(
+                theme_element=theme_element), 'w') as file:
+            file.write(prettify(metadata))
+
         print("XML File created for {theme_element}".format(
             theme_element=theme_element
         ))
-
-        with open('xml/{theme_element}.xml'.format(
-                theme_element=theme_element
-        ), 'w') as file:
-            file.write(prettify(metadata))
 
     print("All metadata assembled in XML Object")
 

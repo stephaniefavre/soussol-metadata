@@ -13,7 +13,7 @@ __pycache__/
 bin/
 pip-selfcheck.json
 pyvenv.cfg
-
+.idea
 .Python
 env/
 build/

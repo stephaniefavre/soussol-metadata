@@ -154,22 +154,22 @@ if __name__ == '__main__':
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
 
-    ##Supprime Table + Schema metadata
+    ##Drop Table + Schema metadata
     drop_metadata(cur=cur)
 
     conn = psycopg2.connect(dbname=db, user="postgres", password="123", host="127.0.0.1")
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     print("Metadata Schema + Tables dropped")
 
-    ##Creer la table metadata + Schema
+    ##Create empty table metadata + Schema
     create_metadata(cur=cur)
     print("Metadata Schema Created")
 
 
-    ##Execute la requête SQL
+    ##Get all informations from all tables
     cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema LIKE 'ssol%' AND table_name  NOT LIKE 'tval%';")
 
-    ##Traiter le résultat
+    ##Analyze and format result and create list metadata
     for table_array in cur.fetchall():
         for table_name in table_array:
             table_list.append(table_name)
@@ -187,7 +187,7 @@ if __name__ == '__main__':
     )
 
 
-    ##Insertion de l'objet dans la table tmetadata_global
+    #Insert all informations in table tmetadata_global
     insert_metadata_to_table(
         cur=cur,
         metadata_list=metadata_list

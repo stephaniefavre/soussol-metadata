@@ -21,7 +21,7 @@ Need to indicate the folder of RAW Excel Information
 ```Bash
 cd /Users/stephaniefavre/Documents/UNIGE/Thèse/BD/Metadata/soussol-metadata/
 source bin/activate
-python metadata.py -f ../source-files/raw_metadata.xlsx
+python postgres_metadata.py -f ../source-files/raw_metadata.xlsx
 ```
 
 ### Execute Script to Export metadata as XML Format

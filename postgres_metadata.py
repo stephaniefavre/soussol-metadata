@@ -103,8 +103,6 @@ def add_description_to_list(
     path_excel_file
 ):
 
-
-
     # Open Excel file
     excel_open = pandas.read_excel(path_excel_file)
 

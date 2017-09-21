@@ -80,7 +80,7 @@ def get_themes(
     ):
     theme_list = []
     querry = """
-        SELECT DISTINCT ON (theme)theme FROM metadata.tmeta_theme 
+        SELECT DISTINCT ON (theme)theme FROM metadata.tmeta_theme
     """
     cur.execute(querry)
 
@@ -131,14 +131,22 @@ if __name__ == '__main__':
     # Get list of all themes
     theme_list = get_themes(cur)
 
+
+
     # Iterate on each theme
     # Start implementing XML parts
     for theme_element in theme_list:
 
-        metadata = ET.Element('metadata')
+        metadata = ET.parse('../source-files/template_sitg.xml').getroot()
+        datainformation = metadata.find('DataInformation')
 
-        theme = ET.SubElement(metadata, 'theme')
-        theme.text = theme_element
+        nom = ET.SubElement(datainformation, "Nom")
+        nom.text = theme_element
+        nom.tail = "\n    "
+
+        techattributs = metadata.find('TechAttributs')
+
+
 
         # Get all tables related to the selected theme
         querry = """
@@ -155,9 +163,9 @@ if __name__ == '__main__':
 
         # Create object 'Table name'
         for table in tables_list:
-            table_name = ET.SubElement(theme, 'table_name')
+            table_name = ET.SubElement(techattributs, 'table_name')
             table_name.text = table
-
+            table_name.tail = "\n    "
 
             # Get all attributes related to the selected table
             querry = """
@@ -169,26 +177,33 @@ if __name__ == '__main__':
             # Get data type and description for each attribute
             cur.execute(querry)
             for elements in cur.fetchall():
-
                 attribute = ET.SubElement(table_name, 'attribute')
                 attribute.text = elements['attribute']
+                attribute.tail = "\n    "
 
                 data_type = ET.SubElement(attribute, 'data_type')
                 data_type.text = elements['data_type']
+                data_type.tail = "\n    "
 
                 description = ET.SubElement(attribute, 'description')
                 description.text = elements['description']
+                description.tail = "\n    "
 
         # Create an XML file for each theme
         with open('xml/{theme_element}.xml'.format(
-                theme_element=theme_element), 'w') as file:
-            file.write(prettify(metadata))
+                theme_element=theme_element), 'wb') as file:
+            #file.write(prettify(metadata))
+            file.write(ET.tostring(metadata,'utf-8'))
 
         print("XML File created for {theme_element}".format(
             theme_element=theme_element
         ))
 
     print("All metadata assembled in XML Object")
+
+    #print(prettify(e))
+
+
 
 
 
